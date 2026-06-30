@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+  🎮 Финальная игра: 2D Minecraft
+  Открой этот файл двойным щелчком — и играй!
+
+  Управление:
+    ← → или A D  — идти
+    ↑ / Пробел / W — прыжок
+    Левая кнопка мыши — копать блок
+    Правая кнопка мыши — поставить блок
+    Клавиши 1..8 — выбрать блок из инвентаря
+    S — сохранить игру, L — загрузить
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>2D Minecraft</title>
+  <style>
+    body {
+      margin: 0;
+      background: #2b2b2b;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { margin: 12px; }
+    canvas { border: 4px solid #111; image-rendering: pixelated; }
+    .controls { margin: 12px; font-size: 14px; color: #bbb; max-width: 700px; text-align: center; }
+    kbd {
+      background: #444; border-radius: 4px; padding: 1px 6px; border: 1px solid #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧱 2D Minecraft</h1>
+  <canvas id="game"></canvas>
+  <div class="controls">
+    <kbd>← →</kbd> идти &nbsp; <kbd>Пробел</kbd> прыжок &nbsp;
+    <kbd>ЛКМ</kbd> копать &nbsp; <kbd>ПКМ</kbd> ставить &nbsp;
+    <kbd>1..8</kbd> выбрать блок &nbsp; <kbd>S</kbd> сохранить &nbsp; <kbd>L</kbd> загрузить
+  </div>
+
+  <!-- Подключаем части игры по порядку: сначала блоки, потом мир, и так далее. -->
+  <script src="js/blocks.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

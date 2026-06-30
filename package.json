@@ -1,0 +1,15 @@
+{
+  "name": "mc-2d-lessons",
+  "version": "1.0.0",
+  "description": "Детский курс по JavaScript: шаг за шагом собираем 2D-Minecraft в браузере",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "eslint-plugin-html": "^8.1.4"
+  }
+}
