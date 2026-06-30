@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!--
+  Урок 12. Анимация — оживляем картинку.
+  Открой файл двойным щелчком — красный квадрат поедет по экрану.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 12 — Анимация</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🎬 Анимация</h1>
+  <p class="hint">Герой едет по экрану. Это много кадров подряд!</p>
+
+  <canvas id="game" width="384" height="200"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== ХОЛСТ И КИСТОЧКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // ===== ПОЛОЖЕНИЕ ГЕРОЯ =====
+    // Эти переменные мы будем менять каждый кадр.
+    let x = 0;    // координата по горизонтали (в пикселях)
+    let y = 80;   // координата по вертикали (в пикселях)
+
+    // ===== ИГРОВОЙ ЦИКЛ =====
+    // Эта функция рисует ОДИН кадр, а в конце просит нарисовать следующий.
+    function gameLoop() {
+      // 1) Стираем весь холст, чтобы старый кадр не оставался.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 2) Двигаем героя: каждый кадр сдвигаем вправо на 2 пикселя.
+      x = x + 2;
+
+      // 3) Если уехал за правый край — возвращаем его влево (зацикливаем).
+      if (x > canvas.width) {
+        x = -TILE;
+      }
+
+      // 4) Рисуем героя на новом месте.
+      ctx.fillStyle = "#d23b3b"; // цвет героя
+      ctx.fillRect(x, y, TILE, TILE);
+
+      // 5) Просим браузер нарисовать следующий кадр — и всё повторяется.
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ===== ЗАПУСКАЕМ АНИМАЦИЮ =====
+    gameLoop();
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поменяй x = x + 2 на x = x + 5 — герой поедет быстрее.
+  </script>
+</body>
+</html>

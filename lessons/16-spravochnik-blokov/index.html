@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+  Урок 16. Справочник блоков.
+  Открой этот файл двойным щелчком — он откроется в браузере.
+  Загляни в консоль (F12 -> Console), чтобы увидеть имена блоков.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 16 — Справочник блоков</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 30px; }
+    .hint { color: #2c5d27; font-size: 17px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>📒 Справочник блоков</h1>
+  <p class="hint">Теперь у каждого блока есть имя и цвет. Цвет берём из справочника.</p>
+
+  <canvas id="game" width="320" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== СПРАВОЧНИК БЛОКОВ =====
+    // У каждого блока есть: id (номер), name (имя), color (цвет), solid (твёрдый ли).
+    const BLOCKS = {
+      AIR:    { id: 0, name: "Воздух", color: null,      solid: false },
+      GRASS:  { id: 1, name: "Трава",  color: "#5fbf4f", solid: true  },
+      DIRT:   { id: 2, name: "Земля",  color: "#8b5a2b", solid: true  },
+      STONE:  { id: 3, name: "Камень", color: "#9a9a9a", solid: true  },
+      WOOD:   { id: 4, name: "Дерево", color: "#7a4a1e", solid: true  },
+      LEAVES: { id: 5, name: "Листва", color: "#3e9b3e", solid: true  },
+      SAND:   { id: 6, name: "Песок",  color: "#e3d27a", solid: true  },
+      WATER:  { id: 7, name: "Вода",   color: "#3a7bd5", solid: false },
+    };
+
+    // Маленькая «телефонная книга»: по id сразу находим карточку блока.
+    const byId = {};
+    for (const key in BLOCKS) {
+      byId[BLOCKS[key].id] = BLOCKS[key];
+    }
+
+    // Функция-поиск: вернуть карточку блока по его номеру.
+    // Если такого нет — вернём воздух, чтобы ничего не сломалось.
+    function getBlockType(id) {
+      return byId[id] || BLOCKS.AIR;
+    }
+
+    // Проверим справочник в консоли.
+    console.log("Блок 1 это:", getBlockType(1).name);
+    console.log("Блок 3 это:", getBlockType(3).name);
+
+    // ===== РАЗМЕР МИРА И ГЕНЕРАЦИЯ (как в прошлом уроке) =====
+    const cols = 10;
+    const rows = 10;
+    const surface = 4;
+
+    const grid = [];
+    for (let y = 0; y < rows; y++) {
+      const line = [];
+      for (let x = 0; x < cols; x++) {
+        if (y < surface) {
+          line.push(BLOCKS.AIR.id);
+        } else if (y === surface) {
+          line.push(BLOCKS.GRASS.id);
+        } else if (y < surface + 4) {
+          line.push(BLOCKS.DIRT.id);
+        } else {
+          line.push(BLOCKS.STONE.id);
+        }
+      }
+      grid.push(line);
+    }
+
+    // ===== РИСУЕМ, БЕРЯ ЦВЕТ ИЗ СПРАВОЧНИКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const id = grid[y][x];
+        const block = getBlockType(id); // карточка блока из справочника
+        if (block.color !== null) {     // воздух не рисуем
+          ctx.fillStyle = block.color;
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+    }
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поставь песок в небе и обнови страницу:
+    // grid[1][2] = 6;
+  </script>
+</body>
+</html>

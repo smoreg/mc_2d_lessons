@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!--
+  Урок 30. Считаем добычу.
+  Открой двойным щелчком. Кликай по блокам — счётчик ресурсов растёт.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 30 — Считаем добычу</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #6dbf63; text-align: center; }
+    h1 { color: #1a3d16; }
+    canvas { background: #87ceeb; border: 4px solid #1a3d16; cursor: pointer; }
+    p { color: #2c5d27; }
+  </style>
+</head>
+<body>
+  <h1>📊 Считаем добычу</h1>
+  <p>Кликай по блокам — смотри, как растут счётчики наверху!</p>
+  <canvas id="game" width="416" height="320"></canvas>
+
+  <script>
+    // ===== Холст =====
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // ===== Модель данных (как в большой игре) =====
+    const TILE = 32;            // размер блока в пикселях
+    // id блоков: 1 трава, 2 земля, 3 камень, 4 дерево, 6 песок
+    const colors = {
+      1: '#6dbf63',   // трава
+      2: '#8b5a2b',   // земля
+      3: '#9a9a9a',   // камень
+      4: '#7a4a1e',   // дерево
+    };
+
+    // Маленький мир: каждая клетка — это id блока (0 = пусто/воздух).
+    const world = [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      [2, 2, 3, 3, 2, 2, 2, 4, 4, 2, 2, 3, 2],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    ];
+
+    // ===== Объект-счётчик ресурсов =====
+    const resources = { dirt: 0, stone: 0, wood: 0, grass: 0 };
+
+    // Какому свойству какой id блока соответствует.
+    function addToResources(blockId) {
+      if (blockId === 1) resources.grass += 1;   // трава
+      if (blockId === 2) resources.dirt += 1;    // земля
+      if (blockId === 3) resources.stone += 1;   // камень
+      if (blockId === 4) resources.wood += 1;    // дерево
+    }
+
+    // ===== Клик по блоку = добыча =====
+    canvas.addEventListener('click', function (e) {
+      const r = canvas.getBoundingClientRect();
+      const cx = Math.floor((e.clientX - r.left) / TILE);
+      const cy = Math.floor((e.clientY - r.top) / TILE);
+      // Внутри мира и не пусто?
+      if (world[cy] && world[cy][cx]) {
+        const blockId = world[cy][cx];
+        addToResources(blockId);   // прибавили в нужный счётчик
+        world[cy][cx] = 0;         // блок исчез
+        console.log('Накопано:', resources);
+        draw();
+      }
+    });
+
+    // ===== Отрисовка мира =====
+    function drawWorld() {
+      for (let y = 0; y < world.length; y++) {
+        for (let x = 0; x < world[y].length; x++) {
+          const id = world[y][x];
+          if (id) {
+            ctx.fillStyle = colors[id];
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+          }
+        }
+      }
+    }
+
+    // ===== Показываем счётчики на экране =====
+    function drawCounters() {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(8, 8, 180, 78);
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Arial';
+      ctx.fillText('🌱 Трава:  ' + resources.grass, 16, 26);
+      ctx.fillText('🟫 Земля:  ' + resources.dirt, 16, 44);
+      ctx.fillText('⬜ Камень: ' + resources.stone, 16, 62);
+      ctx.fillText('🪵 Дерево: ' + resources.wood, 16, 80);
+    }
+
+    // ===== Главная отрисовка =====
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
+      drawCounters();
+    }
+
+    draw();
+    console.log('Кликай по блокам! Счётчики в объекте resources:', resources);
+  </script>
+</body>
+</html>

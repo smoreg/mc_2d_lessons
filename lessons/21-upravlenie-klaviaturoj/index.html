@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!--
+  Урок 21. Управление с клавиатуры.
+  Открой файл двойным щелчком. Кликни по странице и нажимай стрелки.
+  Под холстом покажутся клавиши, которые зажаты прямо сейчас.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 21 — Управление с клавиатуры</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2b2b2b;
+      color: #eee;
+      text-align: center;
+    }
+    h1 { font-size: 28px; }
+    canvas { background: #9bd3ff; border: 4px solid #444; }
+    #info {
+      font-size: 22px;
+      margin-top: 12px;
+      min-height: 30px;
+      color: #ffe66d;
+    }
+  </style>
+</head>
+<body>
+  <h1>⌨️ Управление с клавиатуры</h1>
+  <p>Кликни по странице и нажимай стрелки ← ↑ → ↓ и пробел.</p>
+  <canvas id="game" width="416" height="320"></canvas>
+  <div id="info">Зажатые клавиши: (пока ничего)</div>
+
+  <script>
+    // ===== НАСТРОЙКИ =====
+    const TILE = 32;
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const info = document.getElementById('info');
+
+    // ===== МИР =====
+    const world = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    ];
+
+    // ===== ГЕРОЙ =====
+    let player = { x: 5, y: 5.2, width: 0.8, height: 1.8 };
+
+    // ===== ПАМЯТЬ О КЛАВИШАХ =====
+    // На этой "доске" мы отмечаем, какие клавиши зажаты прямо сейчас.
+    let keys = {};
+
+    // Звоночек 1: клавишу НАЖАЛИ.
+    window.addEventListener('keydown', function (e) {
+      keys[e.key] = true;                 // отмечаем: зажата
+      console.log('Нажали клавишу:', e.key);
+    });
+
+    // Звоночек 2: клавишу ОТПУСТИЛИ.
+    window.addEventListener('keyup', function (e) {
+      keys[e.key] = false;                // отмечаем: отпущена
+    });
+
+    // ===== РИСОВАНИЕ МИРА И ГЕРОЯ =====
+    function drawWorld() {
+      for (let y = 0; y < world.length; y++) {
+        for (let x = 0; x < world[y].length; x++) {
+          const id = world[y][x];
+          if (id === 0) continue;
+          if (id === 1) ctx.fillStyle = '#5fbf4f';
+          if (id === 2) ctx.fillStyle = '#8b5a2b';
+          if (id === 3) ctx.fillStyle = '#9a9a9a';
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = '#d23b3b';
+      ctx.fillRect(player.x * TILE, player.y * TILE,
+                   player.width * TILE, player.height * TILE);
+    }
+
+    // ===== ПОКАЗЫВАЕМ ЗАЖАТЫЕ КЛАВИШИ =====
+    function showKeys() {
+      // Собираем имена клавиш, которые отмечены как зажатые (true).
+      let names = '';
+      if (keys['ArrowLeft'])  names = names + ' ←';
+      if (keys['ArrowRight']) names = names + ' →';
+      if (keys['ArrowUp'])    names = names + ' ↑';
+      if (keys['ArrowDown'])  names = names + ' ↓';
+      if (keys[' '])          names = names + ' [пробел]';
+
+      if (names === '') {
+        info.textContent = 'Зажатые клавиши: (пока ничего)';
+      } else {
+        info.textContent = 'Зажатые клавиши:' + names;
+      }
+    }
+
+    // ===== ИГРОВОЙ ЦИКЛ =====
+    // requestAnimationFrame вызывает gameLoop примерно 60 раз в секунду.
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
+      drawPlayer();
+      showKeys();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>

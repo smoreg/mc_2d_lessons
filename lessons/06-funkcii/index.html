@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  Урок 06. Функции - свои команды.
+  Открой файл двойным щелчком, потом нажми F12 -> вкладка Console.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 06 — Функции</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 60px;
+    }
+    h1 { font-size: 36px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Функции</h1>
+  <p class="hint">Открой консоль (<b>F12</b> → <b>Console</b>), чтобы увидеть, как работают свои команды.</p>
+
+  <script>
+    // ===== ФУНКЦИЯ БЕЗ ПАРАМЕТРОВ =====
+
+    // Объявляем команду. Пока она просто лежит и ждёт вызова.
+    function sayHello() {
+      console.log("Привет, герой! 👋");
+    }
+
+    sayHello();   // вызов - вот теперь команда выполнится
+    sayHello();   // можно вызывать сколько угодно раз
+
+    // ===== ФУНКЦИЯ С ПАРАМЕТРОМ: ПЕЧАТАЕМ БЛОК =====
+
+    // name - параметр, "ингредиент", который мы передаём функции.
+    function printBlock(name) {
+      console.log("🧱 Это блок:", name);
+    }
+
+    printBlock("трава");
+    printBlock("камень");
+    printBlock("дерево");
+
+    // ===== ФУНКЦИЯ С return: НАНОСИМ УРОН =====
+
+    // Берём здоровье и урон, возвращаем НОВОЕ здоровье.
+    function takeDamage(health, damage) {
+      return health - damage;
+    }
+
+    let heroHealth = 100;
+    console.log("Здоровье героя:", heroHealth);
+
+    // Результат функции кладём обратно в переменную.
+    heroHealth = takeDamage(heroHealth, 30);   // получил 30 урона
+    console.log("Ой! После удара:", heroHealth);
+
+    heroHealth = takeDamage(heroHealth, 25);   // и ещё 25 урона
+    console.log("Ещё удар! Теперь:", heroHealth);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Добавь функцию heal(health, amount), которая возвращает health + amount.
+  </script>
+</body>
+</html>

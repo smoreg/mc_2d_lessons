@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+  Урок 26. Копаем блоки.
+  Открой файл двойным щелчком. Кликай левой кнопкой по блокам — они будут исчезать.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 26 — Копаем блоки</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 28px; }
+    .hint { color: #bdc3c7; font-size: 16px; }
+    canvas { background: #9bd3ff; border: 3px solid #1a3d16; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>⛏️ Копаем блоки</h1>
+  <p class="hint">Кликай <b>левой кнопкой</b> по блокам — они исчезнут. Прокопай тоннель!</p>
+
+  <canvas id="game"></canvas>
+
+  <script>
+    // ===== НАСТРОЙКИ МИРА =====
+    const TILE = 32;
+    const COLS = 16;
+    const ROWS = 12;
+
+    const COLORS = {
+      1: '#5fbf4f',  // трава
+      2: '#8b5a2b',  // земля
+      3: '#9a9a9a',  // камень
+    };
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    canvas.width = COLS * TILE;
+    canvas.height = ROWS * TILE;
+
+    // ===== СОЗДАЁМ МИР =====
+    let grid = [];
+    for (let y = 0; y < ROWS; y++) {
+      let line = [];
+      for (let x = 0; x < COLS; x++) {
+        let id = 0;
+        if (y === 6) id = 1;
+        else if (y > 6 && y < 9) id = 2;
+        else if (y >= 9) id = 3;
+        line.push(id);
+      }
+      grid.push(line);
+    }
+
+    let digCount = 0;   // сколько блоков выкопали
+    let hoverX = -1, hoverY = -1;
+
+    // ===== ФУНКЦИИ РАБОТЫ С МИРОМ =====
+
+    // Узнать id блока в клетке (за границей мира — воздух).
+    function getBlock(grid, x, y) {
+      if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return 0;
+      return grid[y][x];
+    }
+
+    // Поставить блок в клетку.
+    function setBlock(grid, x, y, id) {
+      if (x < 0 || y < 0 || x >= COLS || y >= ROWS) return;
+      grid[y][x] = id;
+    }
+
+    // Копать: если в клетке не воздух — ставим воздух. Возвращаем выкопанный id.
+    function digBlock(grid, x, y) {
+      const id = getBlock(grid, x, y);
+      if (id === 0) return null;     // копать нечего
+      setBlock(grid, x, y, 0);       // блок исчез
+      return id;
+    }
+
+    // Переводим координаты мыши в клетку.
+    function mouseToCell(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = Math.floor((e.clientX - rect.left) / TILE);
+      const cy = Math.floor((e.clientY - rect.top) / TILE);
+      return { cx, cy };
+    }
+
+    canvas.addEventListener('mousemove', function (e) {
+      const cell = mouseToCell(e);
+      hoverX = cell.cx;
+      hoverY = cell.cy;
+    });
+
+    // Левый клик — копаем.
+    canvas.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;          // только левая кнопка
+      const cell = mouseToCell(e);
+      const dug = digBlock(grid, cell.cx, cell.cy);
+      if (dug !== null) {
+        digCount = digCount + 1;           // увеличиваем счётчик
+      }
+    });
+
+    canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+    // ===== РИСОВАНИЕ =====
+    function draw() {
+      ctx.fillStyle = '#9bd3ff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const id = grid[y][x];
+          if (id === 0) continue;
+          ctx.fillStyle = COLORS[id];
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+          ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+
+      // рамка под курсором
+      if (hoverX >= 0) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(hoverX * TILE, hoverY * TILE, TILE, TILE);
+        ctx.lineWidth = 1;
+      }
+
+      // счётчик выкопанного
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(canvas.width - 150, 8, 142, 28);
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Arial';
+      ctx.fillText('Выкопано: ' + digCount, canvas.width - 142, 28);
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>

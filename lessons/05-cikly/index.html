@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+  Урок 05. Циклы - повторяем действия.
+  Открой файл двойным щелчком, потом нажми F12 -> вкладка Console.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 05 — Циклы</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 60px;
+    }
+    h1 { font-size: 36px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>🔁 Циклы</h1>
+  <p class="hint">Открой консоль (<b>F12</b> → <b>Console</b>), чтобы увидеть, как робот повторяет действия.</p>
+
+  <script>
+    // ===== РЯД БЛОКОВ ЧЕРЕЗ for =====
+
+    // Счётчик i идёт от 1 до 5. На каждом шаге i увеличивается на 1.
+    for (let i = 1; i <= 5; i++) {
+      console.log("Ставлю блок номер", i);
+    }
+
+    // ===== СЧИТАЕМ ОТ 1 ДО N =====
+
+    let n = 10;   // до скольки считаем (попробуй поменять!)
+    console.log("--- Считаем от 1 до", n, "---");
+    for (let count = 1; count <= n; count++) {
+      console.log(count);
+    }
+
+    // ===== ЛЕСЕНКА ИЗ БЛОКОВ =====
+
+    // На каждой строчке печатаем всё больше блоков 🧱.
+    console.log("--- Лесенка ---");
+    for (let step = 1; step <= 4; step++) {
+      let line = "";                       // пустая строка-ступенька
+      for (let b = 1; b <= step; b++) {    // вложенный цикл: добавляем блоки
+        line = line + "🧱";
+      }
+      console.log(line);
+    }
+
+    // ===== while: СТАВИМ БЛОКИ, ПОКА ОНИ ЕСТЬ =====
+
+    let blocks = 3;   // сколько блоков в руке
+    console.log("--- Расставляем блоки через while ---");
+    while (blocks > 0) {
+      console.log("Поставил блок, осталось ещё:", blocks - 1);
+      blocks = blocks - 1;   // ВАЖНО: уменьшаем, иначе цикл будет вечным!
+    }
+    console.log("Блоки закончились!");
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поменяй числа в циклах и обнови страницу (F5).
+  </script>
+</body>
+</html>

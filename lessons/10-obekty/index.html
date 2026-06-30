@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+  Урок 10. Объекты — описываем предмет.
+  Открой файл двойным щелчком — увидишь блоки, описанные как объекты.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 10 — Объекты</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>📦 Объекты — описываем блок</h1>
+  <p class="hint">Каждый блок теперь — это объект { x, y, color }.</p>
+
+  <canvas id="game" width="320" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== ХОЛСТ И КИСТОЧКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // ===== ФУНКЦИЯ: НАРИСОВАТЬ БЛОК =====
+    // Берёт объект-блок и рисует его. Координаты x, y — в КЛЕТКАХ,
+    // поэтому умножаем на TILE, чтобы получить пиксели.
+    function drawBlock(block) {
+      ctx.fillStyle = block.color;
+      ctx.fillRect(block.x * TILE, block.y * TILE, TILE, TILE);
+    }
+
+    // ===== СОЗДАЁМ БЛОКИ-ОБЪЕКТЫ =====
+    let zemlya = { x: 2, y: 3, color: "#8b5a2b" };  // блок земли
+    let kamen  = { x: 4, y: 5, color: "#9a9a9a" };  // блок камня
+    let derevo = { x: 6, y: 4, color: "#7a4a1e" };  // ствол дерева
+    let listva = { x: 6, y: 3, color: "#3e9b3e" };  // листва над стволом
+
+    // ===== РИСУЕМ ИХ ОДНОЙ КОМАНДОЙ =====
+    drawBlock(zemlya);
+    drawBlock(kamen);
+    drawBlock(derevo);
+    drawBlock(listva);
+
+    // Заглянем внутрь объекта в консоль (F12 -> Console):
+    console.log("Координата x у блока земли:", zemlya.x);
+    console.log("Цвет камня:", kamen.color);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Создай свой блок и нарисуй его:
+    // let pesok = { x: 1, y: 1, color: "#e3d27a" };
+    // drawBlock(pesok);
+  </script>
+</body>
+</html>

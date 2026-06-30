@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<!--
+  Урок 18. Делаем рельеф интереснее.
+  Открой этот файл двойным щелчком — он откроется в браузере.
+  Обнови страницу (F5) несколько раз — мир будет чуть-чуть разным.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 18 — Делаем рельеф интереснее</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 30px; }
+    .hint { color: #2c5d27; font-size: 17px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>⛰️ Делаем рельеф интереснее</h1>
+  <p class="hint">Холмы, немного случайности и маленькая пещерка. Обнови страницу (F5)!</p>
+
+  <canvas id="game" width="512" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== СПРАВОЧНИК БЛОКОВ =====
+    const BLOCKS = {
+      AIR:    { id: 0, name: "Воздух", color: null,      solid: false },
+      GRASS:  { id: 1, name: "Трава",  color: "#5fbf4f", solid: true  },
+      DIRT:   { id: 2, name: "Земля",  color: "#8b5a2b", solid: true  },
+      STONE:  { id: 3, name: "Камень", color: "#9a9a9a", solid: true  },
+      WOOD:   { id: 4, name: "Дерево", color: "#7a4a1e", solid: true  },
+      LEAVES: { id: 5, name: "Листва", color: "#3e9b3e", solid: true  },
+      SAND:   { id: 6, name: "Песок",  color: "#e3d27a", solid: true  },
+      WATER:  { id: 7, name: "Вода",   color: "#3a7bd5", solid: false },
+    };
+
+    const byId = {};
+    for (const key in BLOCKS) {
+      byId[BLOCKS[key].id] = BLOCKS[key];
+    }
+    function getBlockType(id) {
+      return byId[id] || BLOCKS.AIR;
+    }
+
+    // ===== МИР =====
+    function createWorld(cols, rows) {
+      const grid = [];
+      for (let y = 0; y < rows; y++) {
+        const line = [];
+        for (let x = 0; x < cols; x++) {
+          line.push(BLOCKS.AIR.id);
+        }
+        grid.push(line);
+      }
+      return { cols: cols, rows: rows, grid: grid };
+    }
+
+    function getBlock(world, x, y) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) {
+        return BLOCKS.AIR.id;
+      }
+      return world.grid[y][x];
+    }
+
+    function setBlock(world, x, y, id) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) return;
+      world.grid[y][x] = id;
+    }
+
+    // ===== ГЕНЕРАЦИЯ С ХОЛМАМИ =====
+    function generateTerrain(world, base) {
+      for (let x = 0; x < world.cols; x++) {
+        // Холм: синус плавно качается, округляем до целых клеток.
+        const hill = Math.round(2 * Math.sin(x / 3));
+        const top = base + hill; // высота поверхности в этом столбце
+
+        for (let y = 0; y < world.rows; y++) {
+          if (y < top) {
+            setBlock(world, x, y, BLOCKS.AIR.id);       // небо
+          } else if (y === top) {
+            // Иногда на поверхности вырастает песок (случайно).
+            if (Math.random() < 0.1) {
+              setBlock(world, x, y, BLOCKS.SAND.id);
+            } else {
+              setBlock(world, x, y, BLOCKS.GRASS.id);   // обычно трава
+            }
+          } else if (y < top + 4) {
+            setBlock(world, x, y, BLOCKS.DIRT.id);      // земля
+          } else {
+            setBlock(world, x, y, BLOCKS.STONE.id);     // камень
+          }
+        }
+      }
+
+      // ===== ПРОСТАЯ ПЕЩЕРКА =====
+      // Выкапываем выемку из воздуха внутри камня.
+      const caveX = Math.floor(world.cols / 2);
+      const caveY = base + 6;
+      for (let dy = 0; dy < 2; dy++) {
+        for (let dx = 0; dx < 3; dx++) {
+          setBlock(world, caveX + dx, caveY + dy, BLOCKS.AIR.id);
+        }
+      }
+    }
+
+    // ===== РИСУЕМ ВЕСЬ МИР =====
+    function drawWorld(world, ctx) {
+      for (let y = 0; y < world.rows; y++) {
+        for (let x = 0; x < world.cols; x++) {
+          const block = getBlockType(getBlock(world, x, y));
+          if (block.color !== null) {
+            ctx.fillStyle = block.color;
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          }
+        }
+      }
+    }
+
+    // ===== ЗАПУСКАЕМ =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const world = createWorld(16, 10);
+    generateTerrain(world, 4); // средняя высота поверхности — строка 4
+    drawWorld(world, ctx);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Сделай холмы выше: 3 * Math.sin(x / 3)
+  </script>
+</body>
+</html>

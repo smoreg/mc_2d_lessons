@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+  Урок 09. Цвета и много блоков.
+  Открой файл двойным щелчком — увидишь ряд разноцветных блоков.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 09 — Цвета и много блоков</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🌈 Цвета и много блоков</h1>
+  <p class="hint">Целый ряд блоков, нарисованный одним циклом!</p>
+
+  <canvas id="game" width="320" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== ХОЛСТ И КИСТОЧКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // ===== СПИСОК ЦВЕТОВ БЛОКОВ =====
+    // трава, земля, камень, дерево, песок
+    const colors = ["#5fbf4f", "#8b5a2b", "#9a9a9a", "#7a4a1e", "#e3d27a"];
+
+    // ===== РИСУЕМ РЯД БЛОКОВ ЦИКЛОМ =====
+    // i — номер блока. Будем рисовать 8 блоков подряд.
+    for (let i = 0; i < 8; i = i + 1) {
+      // Берём цвет из списка. Чтобы цвета не закончились, крутим их по кругу
+      // с помощью остатка от деления (%): 0,1,2,3,4,0,1,2...
+      ctx.fillStyle = colors[i % colors.length];
+
+      // x сдвигается вправо на одну клетку каждый шаг.
+      let x = i * TILE;
+      let y = 0;
+
+      // Рисуем блок 32 на 32.
+      ctx.fillRect(x, y, TILE, TILE);
+    }
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Сделай ряд длиннее (i < 10) или нарисуй второй ряд ниже (y = TILE).
+  </script>
+</body>
+</html>

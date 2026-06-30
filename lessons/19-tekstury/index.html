@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+  Урок 19. Простые текстуры.
+  Открой этот файл двойным щелчком — он откроется в браузере.
+  Блоки теперь с мелкими деталями — стало гораздо красивее!
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 19 — Простые текстуры</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 30px; }
+    .hint { color: #2c5d27; font-size: 17px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🎨 Простые текстуры</h1>
+  <p class="hint">Обводка, травинки и крапинки — блоки выглядят красивее.</p>
+
+  <canvas id="game" width="512" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== СПРАВОЧНИК БЛОКОВ =====
+    const BLOCKS = {
+      AIR:    { id: 0, name: "Воздух", color: null,      solid: false },
+      GRASS:  { id: 1, name: "Трава",  color: "#5fbf4f", solid: true  },
+      DIRT:   { id: 2, name: "Земля",  color: "#8b5a2b", solid: true  },
+      STONE:  { id: 3, name: "Камень", color: "#9a9a9a", solid: true  },
+      WOOD:   { id: 4, name: "Дерево", color: "#7a4a1e", solid: true  },
+      LEAVES: { id: 5, name: "Листва", color: "#3e9b3e", solid: true  },
+      SAND:   { id: 6, name: "Песок",  color: "#e3d27a", solid: true  },
+      WATER:  { id: 7, name: "Вода",   color: "#3a7bd5", solid: false },
+    };
+
+    const byId = {};
+    for (const key in BLOCKS) {
+      byId[BLOCKS[key].id] = BLOCKS[key];
+    }
+    function getBlockType(id) {
+      return byId[id] || BLOCKS.AIR;
+    }
+
+    // ===== МИР =====
+    function createWorld(cols, rows) {
+      const grid = [];
+      for (let y = 0; y < rows; y++) {
+        const line = [];
+        for (let x = 0; x < cols; x++) {
+          line.push(BLOCKS.AIR.id);
+        }
+        grid.push(line);
+      }
+      return { cols: cols, rows: rows, grid: grid };
+    }
+
+    function getBlock(world, x, y) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) {
+        return BLOCKS.AIR.id;
+      }
+      return world.grid[y][x];
+    }
+
+    function setBlock(world, x, y, id) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) return;
+      world.grid[y][x] = id;
+    }
+
+    function generateTerrain(world, base) {
+      for (let x = 0; x < world.cols; x++) {
+        const hill = Math.round(2 * Math.sin(x / 3));
+        const top = base + hill;
+        for (let y = 0; y < world.rows; y++) {
+          if (y < top) {
+            setBlock(world, x, y, BLOCKS.AIR.id);
+          } else if (y === top) {
+            setBlock(world, x, y, BLOCKS.GRASS.id);
+          } else if (y < top + 4) {
+            setBlock(world, x, y, BLOCKS.DIRT.id);
+          } else {
+            setBlock(world, x, y, BLOCKS.STONE.id);
+          }
+        }
+      }
+    }
+
+    // ===== РИСУЕМ ОДИН БЛОК С ТЕКСТУРОЙ =====
+    function drawBlock(ctx, id, x, y) {
+      const block = getBlockType(id);
+      if (block.color === null) return; // воздух не рисуем
+
+      const px = x * TILE; // левый верхний угол блока в пикселях
+      const py = y * TILE;
+
+      // 1) Заливка основным цветом.
+      ctx.fillStyle = block.color;
+      ctx.fillRect(px, py, TILE, TILE);
+
+      // 2) Детали поверх — у каждого блока свои.
+      if (id === BLOCKS.GRASS.id) {
+        // Травинки: тёмно-зелёные чёрточки сверху.
+        ctx.fillStyle = "#3e9b3e";
+        ctx.fillRect(px + 4,  py + 2, 3, 7);
+        ctx.fillRect(px + 13, py + 2, 3, 9);
+        ctx.fillRect(px + 22, py + 2, 3, 6);
+      } else if (id === BLOCKS.STONE.id) {
+        // Крапинки-камешки.
+        ctx.fillStyle = "#7d7d7d";
+        ctx.fillRect(px + 6,  py + 8,  4, 4);
+        ctx.fillRect(px + 20, py + 6,  3, 3);
+        ctx.fillRect(px + 12, py + 20, 4, 4);
+      } else if (id === BLOCKS.DIRT.id) {
+        // Тёмные крошки земли.
+        ctx.fillStyle = "#6e451f";
+        ctx.fillRect(px + 8,  py + 10, 3, 3);
+        ctx.fillRect(px + 19, py + 18, 3, 3);
+      }
+
+      // 3) Обводка у всех блоков — чтобы их было видно по отдельности.
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.strokeRect(px, py, TILE, TILE);
+    }
+
+    // ===== РИСУЕМ ВЕСЬ МИР =====
+    function drawWorld(world, ctx) {
+      for (let y = 0; y < world.rows; y++) {
+        for (let x = 0; x < world.cols; x++) {
+          drawBlock(ctx, getBlock(world, x, y), x, y);
+        }
+      }
+    }
+
+    // ===== ЗАПУСКАЕМ =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const world = createWorld(16, 10);
+    generateTerrain(world, 4);
+    drawWorld(world, ctx);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Сделай обводку толще: ctx.lineWidth = 2;
+  </script>
+</body>
+</html>

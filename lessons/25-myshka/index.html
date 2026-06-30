@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+  Урок 25. Мышка.
+  Открой файл двойным щелчком. Наведи мышку на мир и кликай левой/правой кнопкой.
+  Координаты клика печатаются в консоль (F12 -> Console).
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 25 — Мышка</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2c3e50;
+      color: #ecf0f1;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 28px; }
+    .hint { color: #bdc3c7; font-size: 16px; }
+    canvas { background: #9bd3ff; border: 3px solid #1a3d16; }
+  </style>
+</head>
+<body>
+  <h1>🖱️ Мышка</h1>
+  <p class="hint">Наведи мышку на мир. Левый клик — зелёная подсветка, правый — красная.</p>
+
+  <canvas id="game"></canvas>
+
+  <script>
+    // ===== НАСТРОЙКИ МИРА =====
+    const TILE = 32;          // размер одной клетки в пикселях
+    const COLS = 16;          // ширина мира в клетках
+    const ROWS = 12;          // высота мира в клетках
+
+    // Цвета блоков (как в большой игре).
+    const COLORS = {
+      1: '#5fbf4f',  // трава
+      2: '#8b5a2b',  // земля
+      3: '#9a9a9a',  // камень
+    };
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    canvas.width = COLS * TILE;
+    canvas.height = ROWS * TILE;
+
+    // ===== СОЗДАЁМ МИР (таблица из id блоков) =====
+    // 0 — воздух (небо), дальше трава, земля, камень.
+    let grid = [];
+    for (let y = 0; y < ROWS; y++) {
+      let line = [];
+      for (let x = 0; x < COLS; x++) {
+        let id = 0;                 // по умолчанию воздух
+        if (y === 6) id = 1;        // строка травы
+        else if (y > 6 && y < 9) id = 2;  // земля
+        else if (y >= 9) id = 3;    // камень
+        line.push(id);
+      }
+      grid.push(line);
+    }
+
+    // ===== ЗАПОМИНАЕМ, ЧТО ДЕЛАЕТ МЫШКА =====
+    let hoverX = -1, hoverY = -1;   // клетка под курсором
+    let lastClickX = -1, lastClickY = -1;  // клетка последнего клика
+    let lastButton = -1;            // какая кнопка кликнула (0 левая, 2 правая)
+
+    // Переводим координаты мыши в номер клетки.
+    function mouseToCell(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = Math.floor((e.clientX - rect.left) / TILE);
+      const cy = Math.floor((e.clientY - rect.top) / TILE);
+      return { cx, cy };
+    }
+
+    // Движение мыши — запоминаем клетку под курсором.
+    canvas.addEventListener('mousemove', function (e) {
+      const cell = mouseToCell(e);
+      hoverX = cell.cx;
+      hoverY = cell.cy;
+    });
+
+    // Нажатие кнопки мыши — запоминаем клетку и кнопку.
+    canvas.addEventListener('mousedown', function (e) {
+      const cell = mouseToCell(e);
+      lastClickX = cell.cx;
+      lastClickY = cell.cy;
+      lastButton = e.button;
+      console.log('Клик! Клетка:', cell.cx, cell.cy, '| Кнопка:', e.button);
+    });
+
+    // Отменяем меню браузера по правому клику.
+    canvas.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+
+    // ===== РИСОВАНИЕ =====
+    function draw() {
+      // небо
+      ctx.fillStyle = '#9bd3ff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // блоки мира
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const id = grid[y][x];
+          if (id === 0) continue;     // воздух не рисуем
+          ctx.fillStyle = COLORS[id];
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+          ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+
+      // подсветка клетки под курсором (жёлтая рамка)
+      if (hoverX >= 0) {
+        ctx.strokeStyle = '#ffeb3b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(hoverX * TILE, hoverY * TILE, TILE, TILE);
+        ctx.lineWidth = 1;
+      }
+
+      // подсветка последнего клика: зелёный для левой, красный для правой
+      if (lastClickX >= 0) {
+        ctx.fillStyle = (lastButton === 0)
+          ? 'rgba(80, 220, 80, 0.5)'    // левая кнопка
+          : 'rgba(220, 60, 60, 0.5)';   // правая кнопка
+        ctx.fillRect(lastClickX * TILE, lastClickY * TILE, TILE, TILE);
+      }
+
+      // подпись внизу
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(0, canvas.height - 26, canvas.width, 26);
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Arial';
+      ctx.fillText('Клетка под курсором: ' + hoverX + ', ' + hoverY, 8, canvas.height - 8);
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  Урок 11. Рисуем мир из списка блоков.
+  Открой файл двойным щелчком — увидишь маленький кусочек мира.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 11 — Мир из списка</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🌍 Мир из списка блоков</h1>
+  <p class="hint">Весь мир хранится в массиве и рисуется одним циклом.</p>
+
+  <canvas id="game" width="384" height="384"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== ХОЛСТ И КИСТОЧКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // ===== ФУНКЦИЯ: НАРИСОВАТЬ БЛОК =====
+    function drawBlock(block) {
+      ctx.fillStyle = block.color;
+      ctx.fillRect(block.x * TILE, block.y * TILE, TILE, TILE);
+    }
+
+    // ===== СПИСОК БЛОКОВ — НАШ МИР =====
+    let world = [
+      // верхний слой — трава (на ряду y = 9)
+      { x: 0, y: 9, color: "#5fbf4f" },
+      { x: 1, y: 9, color: "#5fbf4f" },
+      { x: 2, y: 9, color: "#5fbf4f" },
+      { x: 3, y: 9, color: "#5fbf4f" },
+      { x: 4, y: 9, color: "#5fbf4f" },
+      { x: 5, y: 9, color: "#5fbf4f" },
+
+      // пол под травой — земля (на ряду y = 10)
+      { x: 0, y: 10, color: "#8b5a2b" },
+      { x: 1, y: 10, color: "#8b5a2b" },
+      { x: 2, y: 10, color: "#8b5a2b" },
+      { x: 3, y: 10, color: "#8b5a2b" },
+      { x: 4, y: 10, color: "#8b5a2b" },
+      { x: 5, y: 10, color: "#8b5a2b" },
+
+      // пара блоков камня под землёй
+      { x: 2, y: 11, color: "#9a9a9a" },
+      { x: 3, y: 11, color: "#9a9a9a" },
+
+      // маленькое дерево: ствол и листва
+      { x: 4, y: 8, color: "#7a4a1e" },
+      { x: 4, y: 7, color: "#3e9b3e" },
+    ];
+
+    // ===== РИСУЕМ ВЕСЬ МИР ОДНИМ ЦИКЛОМ =====
+    for (let i = 0; i < world.length; i = i + 1) {
+      let block = world[i]; // берём блок номер i
+      drawBlock(block);     // и рисуем его
+    }
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Добавь свои блоки в массив world выше и обнови страницу (F5).
+  </script>
+</body>
+</html>

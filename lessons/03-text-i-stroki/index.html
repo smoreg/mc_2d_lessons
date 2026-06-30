@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--
+  Урок 03. Текст и общение с игроком.
+  Открой файл двойным щелчком. Программа спросит твоё имя.
+  А секретные сообщения смотри в консоли: F12 -> вкладка Console.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 03 — Текст и строки</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 60px;
+    }
+    h1 { font-size: 36px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    #greeting { font-size: 24px; margin-top: 30px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>💬 Текст и строки</h1>
+  <p class="hint">Открой консоль (<b>F12</b> → <b>Console</b>), чтобы увидеть, как склеивается текст.</p>
+  <p id="greeting"></p>
+
+  <script>
+    // ===== СТРОКИ — ЭТО ТЕКСТ В КАВЫЧКАХ =====
+
+    let blockName = "камень";          // строка
+    let toolName = "кирка";            // ещё одна строка
+    console.log("Чем копаем:", toolName);
+    console.log("Что копаем:", blockName);
+
+    // ===== СКЛЕЙКА ТЕКСТА ЧЕРЕЗ + (КОНКАТЕНАЦИЯ) =====
+
+    let phrase = "Беру " + toolName + " и копаю " + blockName + "!";
+    console.log(phrase);
+
+    // ===== СПРАШИВАЕМ ИМЯ ИГРОКА =====
+
+    // prompt показывает окошко с вопросом и возвращает ответ игрока.
+    let name = prompt("Как тебя зовут, герой?");
+
+    // Если игрок ничего не ввёл и нажал "Отмена" — дадим имя по умолчанию.
+    if (!name) {
+      name = "Стив";
+    }
+
+    // ===== ЗДОРОВАЕМСЯ ЧЕРЕЗ ШАБЛОННЫЕ СТРОКИ =====
+
+    // Обратные кавычки ` ` позволяют вставлять переменные через ${ }.
+    let greeting = `Привет, ${name}! Добро пожаловать в мир блоков! 🧱`;
+    console.log(greeting);
+
+    // Покажем приветствие прямо на странице.
+    document.getElementById("greeting").textContent = greeting;
+
+    // ===== СРАВНИ: ЧИСЛА СЧИТАЮТ, СТРОКИ СКЛЕИВАЮТСЯ =====
+
+    console.log("Числа складываются:  2 + 2 =", 2 + 2);       // будет 4
+    console.log("Строки склеиваются: '2' + '2' =", "2" + "2"); // будет "22"
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поменяй вопрос в prompt и обнови страницу (F5).
+  </script>
+</body>
+</html>

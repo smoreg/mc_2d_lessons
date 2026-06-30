@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+  Урок 17. Рисуем весь мир.
+  Открой этот файл двойным щелчком — он откроется в браузере,
+  и ты увидишь целый мир из блоков.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 17 — Рисуем весь мир</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #6dbf63;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 20px;
+    }
+    h1 { font-size: 30px; }
+    .hint { color: #2c5d27; font-size: 17px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🖌️ Рисуем весь мир</h1>
+  <p class="hint">Целый мир из блоков на экране: небо, трава, земля и камень.</p>
+
+  <canvas id="game" width="416" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== СПРАВОЧНИК БЛОКОВ =====
+    const BLOCKS = {
+      AIR:    { id: 0, name: "Воздух", color: null,      solid: false },
+      GRASS:  { id: 1, name: "Трава",  color: "#5fbf4f", solid: true  },
+      DIRT:   { id: 2, name: "Земля",  color: "#8b5a2b", solid: true  },
+      STONE:  { id: 3, name: "Камень", color: "#9a9a9a", solid: true  },
+      WOOD:   { id: 4, name: "Дерево", color: "#7a4a1e", solid: true  },
+      LEAVES: { id: 5, name: "Листва", color: "#3e9b3e", solid: true  },
+      SAND:   { id: 6, name: "Песок",  color: "#e3d27a", solid: true  },
+      WATER:  { id: 7, name: "Вода",   color: "#3a7bd5", solid: false },
+    };
+
+    const byId = {};
+    for (const key in BLOCKS) {
+      byId[BLOCKS[key].id] = BLOCKS[key];
+    }
+    function getBlockType(id) {
+      return byId[id] || BLOCKS.AIR;
+    }
+
+    // ===== СОЗДАЁМ МИР =====
+    // Весь мир храним в одном объекте: ширина, высота и таблица grid.
+    function createWorld(cols, rows) {
+      const grid = [];
+      for (let y = 0; y < rows; y++) {
+        const line = [];
+        for (let x = 0; x < cols; x++) {
+          line.push(BLOCKS.AIR.id);
+        }
+        grid.push(line);
+      }
+      return { cols: cols, rows: rows, grid: grid };
+    }
+
+    // Узнать блок в клетке. За границей мира — воздух (чтобы не было ошибки).
+    function getBlock(world, x, y) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) {
+        return BLOCKS.AIR.id;
+      }
+      return world.grid[y][x];
+    }
+
+    // Поставить блок в клетку.
+    function setBlock(world, x, y, id) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) return;
+      world.grid[y][x] = id;
+    }
+
+    // Сгенерировать простой плоский ландшафт.
+    function generateTerrain(world, surface) {
+      for (let y = 0; y < world.rows; y++) {
+        for (let x = 0; x < world.cols; x++) {
+          if (y < surface) {
+            setBlock(world, x, y, BLOCKS.AIR.id);
+          } else if (y === surface) {
+            setBlock(world, x, y, BLOCKS.GRASS.id);
+          } else if (y < surface + 4) {
+            setBlock(world, x, y, BLOCKS.DIRT.id);
+          } else {
+            setBlock(world, x, y, BLOCKS.STONE.id);
+          }
+        }
+      }
+    }
+
+    // ===== РИСУЕМ ВЕСЬ МИР =====
+    // Один двойной цикл по всей таблице — и весь мир на экране.
+    function drawWorld(world, ctx) {
+      for (let y = 0; y < world.rows; y++) {
+        for (let x = 0; x < world.cols; x++) {
+          const id = getBlock(world, x, y);
+          const block = getBlockType(id);
+          if (block.color !== null) {
+            ctx.fillStyle = block.color;
+            // Номер клетки превращаем в пиксели, умножая на TILE.
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          }
+        }
+      }
+    }
+
+    // ===== ЗАПУСКАЕМ =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const world = createWorld(13, 10); // 13 столбцов, 10 строк
+    generateTerrain(world, 4);         // трава на строке 4
+    drawWorld(world, ctx);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Прокопай дырку и нарисуй мир заново:
+    // world.grid[6][5] = 0;
+    // drawWorld(world, ctx);
+  </script>
+</body>
+</html>

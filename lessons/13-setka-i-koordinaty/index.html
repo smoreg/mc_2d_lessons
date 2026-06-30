@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!--
+  Урок 13. Сетка и координаты.
+  Открой файл двойным щелчком и поводи мышкой по холсту —
+  клетка под курсором подсветится.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 13 — Сетка и координаты</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff;
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    #info { font-size: 20px; font-weight: bold; color: #1a3d16; margin-top: 10px; }
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Сетка и координаты</h1>
+  <p class="hint">Поводи мышкой по холсту — клетка под курсором подсветится.</p>
+
+  <canvas id="game" width="384" height="384"></canvas>
+  <div id="info">Наведи мышь на холст…</div>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА =====
+    const TILE = 32;
+
+    // ===== ХОЛСТ И КИСТОЧКА =====
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const info = document.getElementById("info");
+
+    // Сколько клеток помещается по ширине и высоте холста.
+    const cols = canvas.width / TILE;
+    const rows = canvas.height / TILE;
+
+    // Запоминаем, над какой клеткой сейчас мышь (-1 = мышь ещё не на холсте).
+    let mouseCol = -1;
+    let mouseRow = -1;
+
+    // ===== ФУНКЦИЯ: НАРИСОВАТЬ СЕТКУ =====
+    function drawGrid() {
+      ctx.strokeStyle = "#88bb88"; // цвет линий сетки
+      // Рисуем рамку для каждой клетки.
+      for (let row = 0; row < rows; row = row + 1) {
+        for (let col = 0; col < cols; col = col + 1) {
+          ctx.strokeRect(col * TILE, row * TILE, TILE, TILE);
+        }
+      }
+    }
+
+    // ===== ФУНКЦИЯ: ПЕРЕРИСОВАТЬ ВСЁ =====
+    function draw() {
+      // Стираем холст.
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Если мышь над какой-то клеткой — подсвечиваем её жёлтым.
+      if (mouseCol >= 0 && mouseRow >= 0) {
+        ctx.fillStyle = "#ffe066"; // цвет подсветки
+        ctx.fillRect(mouseCol * TILE, mouseRow * TILE, TILE, TILE);
+      }
+
+      // Рисуем сетку поверх.
+      drawGrid();
+    }
+
+    // ===== СЛЕДИМ ЗА МЫШЬЮ =====
+    canvas.addEventListener("mousemove", function (e) {
+      // Переводим пиксели мыши в номер клетки (делим на TILE и округляем вниз).
+      mouseCol = Math.floor(e.offsetX / TILE);
+      mouseRow = Math.floor(e.offsetY / TILE);
+
+      info.textContent = "Клетка: колонка " + mouseCol + ", ряд " + mouseRow;
+      draw(); // перерисовываем картинку с новой подсветкой
+    });
+
+    // Когда мышь ушла с холста — убираем подсветку.
+    canvas.addEventListener("mouseleave", function () {
+      mouseCol = -1;
+      mouseRow = -1;
+      info.textContent = "Наведи мышь на холст…";
+      draw();
+    });
+
+    // ===== ПЕРВАЯ ОТРИСОВКА =====
+    draw();
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поменяй цвет подсветки "#ffe066" или размер клетки const TILE = 48;
+  </script>
+</body>
+</html>

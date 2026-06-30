@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Урок 08. Первый холст.
+  Открой этот файл двойным щелчком — он откроется в браузере,
+  и ты сразу увидишь нарисованный блок земли.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 08 — Первый холст</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #9bd3ff; /* цвет неба */
+      color: #1a3d16;
+      text-align: center;
+      padding-top: 30px;
+    }
+    h1 { font-size: 32px; }
+    .hint { color: #2c5d27; font-size: 18px; }
+    /* Рамка вокруг холста, чтобы было видно его границы. */
+    canvas { border: 3px solid #1a3d16; background: #9bd3ff; }
+  </style>
+</head>
+<body>
+  <h1>🎨 Первый холст</h1>
+  <p class="hint">Это наш самый первый блок земли, нарисованный на холсте!</p>
+
+  <!-- Холст для рисования. Размеры задаём прямо тут. -->
+  <canvas id="game" width="320" height="320"></canvas>
+
+  <script>
+    // ===== РАЗМЕР БЛОКА (одинаковый во всём курсе) =====
+    const TILE = 32; // один блок — это квадрат 32 на 32 пикселя
+
+    // ===== БЕРЁМ ХОЛСТ И КИСТОЧКУ =====
+    const canvas = document.getElementById("game"); // нашли холст по id
+    const ctx = canvas.getContext("2d");            // взяли кисточку (контекст)
+
+    // ===== РИСУЕМ ПЕРВЫЙ БЛОК =====
+    // 1) Выбираем цвет краски — цвет земли.
+    ctx.fillStyle = "#8b5a2b";
+
+    // 2) Рисуем закрашенный квадрат: левый верхний угол в точке (0, 0),
+    //    ширина и высота — один TILE (32 пикселя).
+    ctx.fillRect(0, 0, TILE, TILE);
+
+    // ===== ПОПРОБУЙ САМ =====
+    // Поменяй цвет на цвет травы и сдвинь блок в центр:
+    // ctx.fillStyle = "#5fbf4f";
+    // ctx.fillRect(100, 100, TILE, TILE);
+  </script>
+</body>
+</html>

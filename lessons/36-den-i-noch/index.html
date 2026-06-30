@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+  Урок 36. День и ночь.
+  Открой двойным щелчком и понаблюдай, как небо темнеет и снова светлеет.
+  Управление: ← → ходить, Пробел/↑ прыжок, ЛКМ копать, ПКМ ставить, 1..4 выбрать блок.
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 36 — День и ночь</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #1a1a1a; color: #eee; text-align: center; }
+    h1 { color: #8fd97f; }
+    canvas { border: 4px solid #111; image-rendering: pixelated; cursor: pointer; }
+    .hint { color: #bbb; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>🌙 День и ночь</h1>
+  <p class="hint">Смотри, как небо плавно темнеет ночью и светлеет днём. Можешь ходить и копать!</p>
+  <canvas id="game" width="640" height="416"></canvas>
+
+  <script>
+    // ===== Холст =====
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // ===== Модель данных (как в большой игре) =====
+    const TILE = 32;
+    const COLS = 20;
+    const ROWS = 13;
+
+    // id блоков: 0 воздух,1 трава,2 земля,3 камень,4 дерево,5 листва,6 песок,7 вода
+    const colors = {
+      1: '#5fbf4f', 2: '#8b5a2b', 3: '#9a9a9a', 4: '#7a4a1e',
+      5: '#3e9b3e', 6: '#e3d27a', 7: '#3a7bd5',
+    };
+    const solid = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true };
+
+    // ===== Мир =====
+    let world = { cols: COLS, rows: ROWS, grid: [] };
+    (function generateWorld() {
+      const grid = [];
+      for (let y = 0; y < ROWS; y++) {
+        const line = [];
+        for (let x = 0; x < COLS; x++) {
+          let id = 0;
+          if (y === 7) id = 1;
+          else if (y > 7 && y < 11) id = 2;
+          else if (y >= 11) id = 3;
+          line.push(id);
+        }
+        grid.push(line);
+      }
+      world = { cols: COLS, rows: ROWS, grid: grid };
+    })();
+
+    // ===== Инвентарь и герой =====
+    let inventory = {
+      slots: [
+        { blockId: 2, count: 20 },
+        { blockId: 3, count: 20 },
+        { blockId: 4, count: 20 },
+        { blockId: 0, count: 0 },
+      ],
+      selected: 0,
+    };
+    let player = { x: COLS / 2, y: 0, vx: 0, vy: 0, onGround: false, width: 0.8, height: 1.8 };
+
+    // ===== ДЕНЬ И НОЧЬ (главное в этом уроке!) =====
+    const dayColor = [155, 211, 255];   // #9bd3ff — светло-голубое дневное небо
+    const nightColor = [12, 18, 54];    // тёмно-синее ночное небо
+    let time = 0;                       // таймер времени
+
+    // Смешать два числа: t=0 → a, t=1 → b, t=0.5 → посередине.
+    function mix(a, b, t) {
+      return Math.round(a + (b - a) * t);
+    }
+    // Текущий цвет неба в зависимости от времени.
+    function skyColor() {
+      time += 0.004;                          // время идёт вперёд
+      const day = (Math.sin(time) + 1) / 2;   // 0 = ночь, 1 = день
+      const r = mix(nightColor[0], dayColor[0], day);
+      const g = mix(nightColor[1], dayColor[1], day);
+      const b = mix(nightColor[2], dayColor[2], day);
+      return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+    // Сейчас день? (нужно, чтобы рисовать солнце или луну)
+    function isDay() {
+      return Math.sin(time) >= 0;
+    }
+
+    // ===== Работа с блоками =====
+    function getBlock(x, y) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) return 0;
+      return world.grid[y][x];
+    }
+    function setBlock(x, y, id) {
+      if (x < 0 || y < 0 || x >= world.cols || y >= world.rows) return;
+      world.grid[y][x] = id;
+    }
+
+    // ===== Физика героя =====
+    function collides(px, py) {
+      const x0 = Math.floor(px), x1 = Math.floor(px + player.width - 0.001);
+      const y0 = Math.floor(py), y1 = Math.floor(py + player.height - 0.001);
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          if (solid[getBlock(x, y)]) return true;
+        }
+      }
+      return false;
+    }
+    function updatePlayer(dir, jump) {
+      player.vx = dir * 0.12;
+      const nx = player.x + player.vx;
+      if (!collides(nx, player.y)) player.x = nx;
+      if (jump && player.onGround) { player.vy = -0.5; player.onGround = false; }
+      player.vy += 0.04;
+      const ny = player.y + player.vy;
+      if (!collides(player.x, ny)) { player.y = ny; player.onGround = false; }
+      else { if (player.vy > 0) player.onGround = true; player.vy = 0; }
+    }
+
+    // ===== Инвентарь =====
+    function addBlock(blockId) {
+      for (const slot of inventory.slots) {
+        if (slot.blockId === blockId && slot.count > 0) { slot.count += 1; return; }
+      }
+      for (const slot of inventory.slots) {
+        if (slot.count === 0) { slot.blockId = blockId; slot.count = 1; return; }
+      }
+    }
+    function selectedBlockId() {
+      const slot = inventory.slots[inventory.selected];
+      return (slot && slot.count > 0) ? slot.blockId : 0;
+    }
+    function removeFromSelected() {
+      const slot = inventory.slots[inventory.selected];
+      if (!slot || slot.count <= 0) return;
+      slot.count -= 1;
+      if (slot.count === 0) slot.blockId = 0;
+    }
+
+    // ===== Ввод с клавиатуры =====
+    const keys = {};
+    window.addEventListener('keydown', function (e) {
+      keys[e.key] = true;
+      if (e.key >= '1' && e.key <= '4') inventory.selected = Number(e.key) - 1;
+    });
+    window.addEventListener('keyup', function (e) { keys[e.key] = false; });
+
+    // ===== Ввод мышью =====
+    canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    canvas.addEventListener('mousedown', function (e) {
+      const r = canvas.getBoundingClientRect();
+      const cx = Math.floor((e.clientX - r.left) / TILE);
+      const cy = Math.floor((e.clientY - r.top) / TILE);
+      if (e.button === 0) {
+        const id = getBlock(cx, cy);
+        if (id !== 0) { setBlock(cx, cy, 0); addBlock(id); }
+      } else if (e.button === 2) {
+        const id = selectedBlockId();
+        if (id !== 0 && getBlock(cx, cy) === 0) { setBlock(cx, cy, id); removeFromSelected(); }
+      }
+    });
+
+    // ===== Рисование =====
+    function drawSky() {
+      ctx.fillStyle = skyColor();          // небо меняет цвет каждый кадр!
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // солнце днём, луна ночью
+      if (isDay()) {
+        ctx.fillStyle = '#fff2a8';
+        ctx.beginPath();
+        ctx.arc(canvas.width - 70, 60, 26, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#e8e8ff';
+        ctx.beginPath();
+        ctx.arc(canvas.width - 70, 60, 22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    function drawWorld() {
+      for (let y = 0; y < world.rows; y++) {
+        for (let x = 0; x < world.cols; x++) {
+          const id = world.grid[y][x];
+          if (!id) continue;
+          ctx.fillStyle = colors[id];
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+          ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+          ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+    }
+    function drawPlayer() {
+      ctx.fillStyle = '#d23b3b';
+      ctx.fillRect(player.x * TILE, player.y * TILE, player.width * TILE, player.height * TILE);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect((player.x + 0.15) * TILE, (player.y + 0.2) * TILE, 6, 6);
+      ctx.fillRect((player.x + 0.5) * TILE, (player.y + 0.2) * TILE, 6, 6);
+    }
+    function drawInventory() {
+      const size = 40, startX = 10, y = canvas.height - size - 10;
+      for (let i = 0; i < inventory.slots.length; i++) {
+        const slot = inventory.slots[i];
+        const x = startX + i * (size + 6);
+        ctx.fillStyle = (i === inventory.selected) ? '#fff' : 'rgba(0,0,0,0.4)';
+        ctx.fillRect(x, y, size, size);
+        if (slot.count > 0 && colors[slot.blockId]) {
+          ctx.fillStyle = colors[slot.blockId];
+          ctx.fillRect(x + 6, y + 6, size - 12, size - 12);
+          ctx.fillStyle = (i === inventory.selected) ? '#000' : '#fff';
+          ctx.font = '12px Arial';
+          ctx.fillText(String(slot.count), x + 4, y + size - 4);
+        }
+        ctx.fillStyle = (i === inventory.selected) ? '#000' : '#fff';
+        ctx.font = '10px Arial';
+        ctx.fillText(String(i + 1), x + size - 10, y + 12);
+      }
+    }
+    function drawTimeLabel() {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(10, 10, 120, 28);
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Arial';
+      ctx.fillText(isDay() ? '☀️ День' : '🌙 Ночь', 18, 30);
+    }
+
+    // ===== Игровой цикл =====
+    function loop() {
+      let dir = 0;
+      if (keys['ArrowLeft'] || keys['a']) dir = -1;
+      if (keys['ArrowRight'] || keys['d']) dir = 1;
+      const jump = keys['ArrowUp'] || keys[' '] || keys['w'];
+      updatePlayer(dir, jump);
+
+      drawSky();
+      drawWorld();
+      drawPlayer();
+      drawInventory();
+      drawTimeLabel();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

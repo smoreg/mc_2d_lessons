@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!--
+  Урок 24. Столкновения с блоками.
+  Открой файл двойным щелчком, кликни по странице.
+  Герой падает и встаёт на землю, не проваливается и не проходит сквозь блоки.
+  Ходи ← →, прыгай на ↑ или пробел. Попробуй запрыгнуть на холмик!
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 24 — Столкновения с блоками</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2b2b2b;
+      color: #eee;
+      text-align: center;
+    }
+    h1 { font-size: 28px; }
+    canvas { background: #9bd3ff; border: 4px solid #444; }
+  </style>
+</head>
+<body>
+  <h1>🧱 Столкновения с блоками</h1>
+  <p>Кликни по странице. Ходи ← →, прыгай ↑ / пробел. Попробуй залезть на холмик!</p>
+  <canvas id="game" width="480" height="384"></canvas>
+
+  <script>
+    // ===== НАСТРОЙКИ ФИЗИКИ =====
+    const TILE = 32;
+    const speed = 0.12;
+    const gravity = 0.04;
+    const jumpPower = 0.5;
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // ===== МИР =====
+    // 0 воздух, 1 трава, 2 земля, 3 камень.
+    // Слева сделали холмик повыше, чтобы было на что запрыгивать.
+    const world = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    ];
+
+    // ===== ГЕРОЙ =====
+    let player = {
+      x: 8, y: 0,          // начинаем сверху, чтобы увидеть падение
+      vx: 0, vy: 0,        // скорость по горизонтали и вертикали
+      onGround: false,
+      width: 0.8, height: 1.8
+    };
+
+    // ===== ПАМЯТЬ О КЛАВИШАХ =====
+    let keys = {};
+    window.addEventListener('keydown', function (e) { keys[e.key] = true; });
+    window.addEventListener('keyup',   function (e) { keys[e.key] = false; });
+
+    // ===== БЛОКИ: вспомогательные функции =====
+    // Твёрдый ли блок? Сквозь воздух (0) и воду (7) проходим, остальное — нет.
+    function isSolid(id) {
+      return id !== 0 && id !== 7;
+    }
+
+    // Какой блок в клетке (x, y)? За границей мира считаем воздух.
+    function getBlock(world, x, y) {
+      if (y < 0 || y >= world.length)    return 0;
+      if (x < 0 || x >= world[0].length) return 0;
+      return world[y][x];
+    }
+
+    // ===== ГЛАВНАЯ ФУНКЦИЯ: СТОЛКНОВЕНИЕ =====
+    // Пересекает ли прямоугольник героя (px, py, w, h) хоть один твёрдый блок?
+    function collides(world, px, py, w, h) {
+      // Клетки, которые задевает прямоугольник: от левой-верхней до правой-нижней.
+      const x0 = Math.floor(px);
+      const x1 = Math.floor(px + w - 0.001);
+      const y0 = Math.floor(py);
+      const y1 = Math.floor(py + h - 0.001);
+
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          if (isSolid(getBlock(world, x, y))) return true;  // нашли твёрдый блок
+        }
+      }
+      return false;   // путь свободен
+    }
+
+    // ===== ОБНОВЛЕНИЕ ФИЗИКИ =====
+    function update() {
+      const w = player.width;
+      const h = player.height;
+
+      // Направление по нажатым клавишам: -1 влево, 1 вправо, 0 стоим.
+      let dir = 0;
+      if (keys['ArrowRight']) dir = 1;
+      if (keys['ArrowLeft'])  dir = -1;
+
+      // --- ШАГ 1: движение по X (отдельно!) ---
+      player.vx = dir * speed;
+      let nextX = player.x + player.vx;
+      if (!collides(world, nextX, player.y, w, h)) {
+        player.x = nextX;     // путь свободен — идём
+      } else {
+        player.vx = 0;        // впереди стена — стоим
+      }
+
+      // --- ШАГ 2: прыжок (только если на земле) ---
+      const wantJump = keys['ArrowUp'] || keys[' '];
+      if (wantJump && player.onGround) {
+        player.vy = -jumpPower;   // толчок вверх
+        player.onGround = false;
+      }
+
+      // --- ШАГ 3: гравитация и движение по Y (отдельно!) ---
+      player.vy += gravity;
+      let nextY = player.y + player.vy;
+      if (!collides(world, player.x, nextY, w, h)) {
+        player.y = nextY;          // свободно — падаем/летим
+        player.onGround = false;
+      } else {
+        // уперлись по вертикали
+        if (player.vy > 0) {
+          player.onGround = true;  // падали вниз → встали на землю
+        }
+        player.vy = 0;             // пол или потолок остановил
+      }
+    }
+
+    // ===== РИСОВАНИЕ =====
+    function drawWorld() {
+      for (let y = 0; y < world.length; y++) {
+        for (let x = 0; x < world[y].length; x++) {
+          const id = world[y][x];
+          if (id === 0) continue;
+          if (id === 1) ctx.fillStyle = '#5fbf4f';
+          if (id === 2) ctx.fillStyle = '#8b5a2b';
+          if (id === 3) ctx.fillStyle = '#9a9a9a';
+          ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        }
+      }
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = '#d23b3b';
+      ctx.fillRect(player.x * TILE, player.y * TILE,
+                   player.width * TILE, player.height * TILE);
+    }
+
+    // ===== ИГРОВОЙ ЦИКЛ =====
+    function gameLoop() {
+      update();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
+      drawPlayer();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>

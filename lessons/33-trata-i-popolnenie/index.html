@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!--
+  Урок 33. Трата и пополнение.
+  Открой двойным щелчком.
+  Левый клик — копать (блок -> инвентарь). Клавиши 1-8 — выбрать блок.
+  Правый клик — поставить выбранный блок (тратится из инвентаря).
+-->
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Урок 33 — Трата и пополнение</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #6dbf63; text-align: center; }
+    h1 { color: #1a3d16; }
+    canvas { background: #87ceeb; border: 4px solid #1a3d16; }
+    p { color: #2c5d27; }
+  </style>
+</head>
+<body>
+  <h1>⛏️🧱 Трата и пополнение</h1>
+  <p>Левый клик — копать. Клавиши <b>1–8</b> — выбрать блок. Правый клик — поставить.</p>
+  <canvas id="game" width="416" height="320"></canvas>
+
+  <script>
+    // ===== Холст =====
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // ===== Модель данных =====
+    const TILE = 32;
+    // id блоков: 1 трава, 2 земля, 3 камень, 4 дерево, 6 песок
+    const colors = {
+      1: '#6dbf63', 2: '#8b5a2b', 3: '#9a9a9a', 4: '#7a4a1e', 6: '#e0d59a',
+    };
+    const names = { 0: 'ничего', 1: 'трава', 2: 'земля', 3: 'камень', 4: 'дерево', 6: 'песок' };
+
+    // ===== Инвентарь =====
+    function createInventory(size) {
+      const slots = [];
+      for (let i = 0; i < size; i++) {
+        slots.push({ blockId: 0, count: 0 });
+      }
+      return { slots: slots, selected: 0 };
+    }
+    function addBlock(inv, blockId, amount) {
+      const n = amount || 1;
+      for (const slot of inv.slots) {
+        if (slot.blockId === blockId && slot.count > 0) { slot.count += n; return; }
+      }
+      for (const slot of inv.slots) {
+        if (slot.count === 0) { slot.blockId = blockId; slot.count = n; return; }
+      }
+    }
+    // Убрать один блок из выбранного слота. Вернуть его id или null (если пусто).
+    function removeFromSelected(inv) {
+      const slot = inv.slots[inv.selected];
+      if (!slot || slot.count <= 0) return null;
+      const id = slot.blockId;
+      slot.count -= 1;
+      if (slot.count === 0) slot.blockId = 0;   // слот опустел
+      return id;
+    }
+    function selectSlot(inv, index) {
+      if (index >= 0 && index < inv.slots.length) inv.selected = index;
+    }
+    function selectedBlockId(inv) {
+      const slot = inv.slots[inv.selected];
+      if (!slot || slot.count <= 0) return 0;
+      return slot.blockId;
+    }
+
+    // Стартовый инвентарь — немного блоков, чтобы было чем строить.
+    const inventory = createInventory(8);
+    addBlock(inventory, 2, 5);   // земля
+    addBlock(inventory, 4, 2);   // дерево
+
+    // ===== Мир =====
+    const world = [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [2, 2, 2, 3, 3, 2, 2, 2, 4, 4, 2, 3, 2],
+      [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    ];
+
+    // ===== Выбор слота клавишами =====
+    window.addEventListener('keydown', function (e) {
+      if (e.key >= '1' && e.key <= '9') {
+        selectSlot(inventory, Number(e.key) - 1);
+        draw();
+      }
+    });
+
+    // Узнать клетку под курсором.
+    function cellFromEvent(e) {
+      const r = canvas.getBoundingClientRect();
+      const cx = Math.floor((e.clientX - r.left) / TILE);
+      const cy = Math.floor((e.clientY - r.top) / TILE);
+      return { cx: cx, cy: cy };
+    }
+
+    // ===== Левый клик = копать =====
+    canvas.addEventListener('click', function (e) {
+      const c = cellFromEvent(e);
+      if (world[c.cy] && world[c.cy][c.cx]) {
+        const dug = world[c.cy][c.cx];   // что выкопали
+        world[c.cy][c.cx] = 0;           // блок исчез
+        addBlock(inventory, dug, 1);     // пополнение инвентаря
+        console.log('Выкопал', names[dug], '-> в инвентарь');
+        draw();
+      }
+    });
+
+    // ===== Правый клик = поставить =====
+    // Сначала выключаем браузерное меню по правой кнопке.
+    canvas.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      const c = cellFromEvent(e);
+      // ставить можно только на пустую клетку внутри мира
+      if (world[c.cy] && world[c.cy][c.cx] === 0) {
+        const id = selectedBlockId(inventory);
+        if (id !== 0) {
+          // тратим блок из инвентаря
+          const taken = removeFromSelected(inventory);
+          if (taken !== null) {
+            world[c.cy][c.cx] = taken;   // поставили блок в мир
+            console.log('Поставил', names[taken]);
+          }
+        } else {
+          console.log('Слот пуст — ставить нечем!');
+        }
+        draw();
+      }
+    });
+
+    // ===== Отрисовка мира =====
+    function drawWorld() {
+      for (let y = 0; y < world.length; y++) {
+        for (let x = 0; x < world[y].length; x++) {
+          const id = world[y][x];
+          if (id) {
+            ctx.fillStyle = colors[id];
+            ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.strokeRect(x * TILE, y * TILE, TILE, TILE);
+          }
+        }
+      }
+    }
+
+    // ===== Панель инвентаря =====
+    function drawInventory(ctx, inv) {
+      const slotSize = 40;
+      const startX = 10;
+      const y = canvas.height - slotSize - 10;
+      for (let i = 0; i < inv.slots.length; i++) {
+        const slot = inv.slots[i];
+        const x = startX + i * (slotSize + 6);
+        ctx.fillStyle = (i === inv.selected) ? '#ffffff' : 'rgba(0,0,0,0.4)';
+        ctx.fillRect(x, y, slotSize, slotSize);
+        if (slot.count > 0) {
+          ctx.fillStyle = colors[slot.blockId];
+          ctx.fillRect(x + 6, y + 6, slotSize - 12, slotSize - 12);
+          ctx.fillStyle = (i === inv.selected) ? '#000' : '#fff';
+          ctx.font = '12px Arial';
+          ctx.fillText(String(slot.count), x + 4, y + slotSize - 4);
+        }
+        ctx.fillStyle = (i === inv.selected) ? '#000' : '#fff';
+        ctx.font = '10px Arial';
+        ctx.fillText(String(i + 1), x + slotSize - 10, y + 12);
+      }
+    }
+
+    function drawHand() {
+      const id = selectedBlockId(inventory);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(8, 8, 200, 28);
+      ctx.fillStyle = '#fff';
+      ctx.font = '16px Arial';
+      ctx.fillText('В руке: ' + names[id], 16, 28);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWorld();
+      drawInventory(ctx, inventory);
+      drawHand();
+    }
+
+    draw();
+    console.log('Левый клик — копать, правый — ставить, цифры — выбор слота.');
+  </script>
+</body>
+</html>
